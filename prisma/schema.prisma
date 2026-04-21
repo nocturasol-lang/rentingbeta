@@ -1,0 +1,335 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------
+// AUTH
+// -----------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String   // bcrypt hashed, 12 rounds
+  role      UserRole @default(MANAGER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  expires      DateTime
+  sessionToken String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+}
+
+// -----------------------------------------
+// PROPERTIES
+// -----------------------------------------
+
+model Property {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+  address     String
+  city        String @default("Kavala")
+  country     String @default("GR")
+  latitude    Float?
+  longitude   Float?
+  size        Int? // square meters
+
+  // Pricing — all in CENTS
+  pricePerNightCents Int
+  cleaningFeeCents   Int    @default(0)
+  currency           String @default("EUR")
+
+  // Platform fee — percentage, e.g. 15.00 = 15%, 0.00 = demo
+  platformFeePercent Decimal @default(0.00) @db.Decimal(5, 2)
+
+  // Property details
+  maxGuests     Int      @default(2)
+  bedrooms      Int      @default(1)
+  bathrooms     Int      @default(1)
+  amenities     String[] // e.g. ["wifi", "air_conditioning", "bbq"]
+  licenseNumber String?
+
+  // Review data (from Booking.com — display only)
+  reviewScore Float? // e.g. 9.4
+  reviewCount Int?   // e.g. 75
+  beachDistanceM Int? // distance to nearest beach in meters
+
+  // Booking.com iCal feed
+  icalUrl          String?
+  icalLastSyncedAt DateTime?
+  icalSyncStatus   IcalSyncStatus @default(PENDING)
+
+  // Booking rules
+  checkInFrom         String  @default("14:00") // "HH:MM"
+  checkInTo           String  @default("20:00")
+  checkOutFrom        String  @default("08:00")
+  checkOutTo          String  @default("10:00")
+  minNights           Int     @default(1)
+  cancellationPolicy  String  @default("FLEXIBLE") // FLEXIBLE | MODERATE | STRICT
+  checkInInstructions String? // Optional instructions shown to guest after booking
+
+  // Stripe Connect — property owner's account (null for demo)
+  stripeAccountId String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings          Booking[]
+  images            PropertyImage[]
+  externalBlocks    ExternalBlock[]
+  availabilityRules AvailabilityRule[]
+  cleaningTasks     CleaningTask[]
+  maintenanceIssues MaintenanceIssue[]
+
+  @@map("properties")
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  alt        String?
+  position   Int      @default(0) // sort order, 0 = cover image
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_images")
+}
+
+enum IcalSyncStatus {
+  PENDING // never synced
+  SYNCING // sync in progress
+  SUCCESS // last sync succeeded
+  ERROR   // last sync failed
+}
+
+// -----------------------------------------
+// AVAILABILITY
+// -----------------------------------------
+
+// Dates blocked by Booking.com iCal or other external sources
+// SEPARATE from the bookings table — both must be checked
+model ExternalBlock {
+  id         String   @id @default(cuid())
+  propertyId String
+  source     String   @default("booking_com") // "booking_com" | "airbnb" | "manual"
+  externalId String? // UID from the iCal event
+  checkIn    DateTime @db.Date
+  checkOut   DateTime @db.Date
+  summary    String? // raw iCal SUMMARY field
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate imports of the same iCal event
+  @@unique([propertyId, externalId, source])
+  @@index([propertyId, checkIn, checkOut])
+  @@map("external_blocks")
+}
+
+// Admin-defined rules: blocked dates, minimum stay requirements
+model AvailabilityRule {
+  id         String               @id @default(cuid())
+  propertyId String
+  type       AvailabilityRuleType
+  startDate  DateTime             @db.Date
+  endDate    DateTime             @db.Date
+  minNights  Int?
+  note       String?
+  createdAt  DateTime             @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, startDate, endDate])
+  @@map("availability_rules")
+}
+
+enum AvailabilityRuleType {
+  BLOCKED  // dates blocked (owner using property, maintenance, etc.)
+  MIN_STAY // minimum stay requirement for a date range
+}
+
+// -----------------------------------------
+// BOOKINGS
+// -----------------------------------------
+
+model Booking {
+  id         String @id @default(cuid())
+  reference  String @unique // "KVL-A3F9B2C1" — shown to guest
+  propertyId String
+
+  // Guest details
+  guestName             String
+  guestEmail            String
+  guestPhone            String?
+  guestCount            Int
+  guestIdNumber         String?   // Passport or national ID number (Greek law)
+  guestIdType           GuestIdType? // PASSPORT or NATIONAL_ID
+  guestNationality      String?   // ISO country code, e.g. "GR", "DE"
+  guestDateOfBirth      DateTime? @db.Date
+  guestResidenceCountry String?   // ISO country code
+
+  // Stay dates
+  checkIn  DateTime @db.Date
+  checkOut DateTime @db.Date
+  nights   Int // computed: days between checkIn and checkOut
+
+  // Pricing snapshot — recorded at booking time, not live
+  // All values in CENTS
+  pricePerNightCents Int
+  cleaningFeeCents   Int
+  platformFeeCents   Int // 0 for demo
+  ownerPayoutCents   Int // total - platformFee
+  totalCents         Int // what Stripe charges
+
+  platformFeePercent Decimal @db.Decimal(5, 2) // snapshot of rate at booking time
+  currency           String  @default("EUR")
+
+  // Status
+  status BookingStatus @default(PENDING)
+
+  // Source
+  source BookingSource @default(DIRECT)
+
+  // Stripe
+  stripePaymentIntentId String? @unique
+  stripeChargeId        String?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+
+  // Cancellation
+  cancellationReason String?
+
+  // Internal admin notes (e.g. "cash payment received", "phone booking from repeat guest")
+  adminNotes String?
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  @@index([propertyId, checkIn, checkOut])
+  @@index([status])
+  @@index([status, createdAt]) // expiry worker: WHERE status='PENDING' AND createdAt < X
+  @@index([guestEmail])
+  @@index([reference])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING    // created, awaiting payment — Redis lock held, 10 min TTL
+  CONFIRMED  // payment successful — dates blocked
+  CANCELLING // cancellation requested, refund in progress
+  CANCELLED  // fully cancelled, dates unblocked, refund issued
+  FAILED     // payment failed or 10-min lock expired
+}
+
+enum BookingSource {
+  DIRECT     // booked through our platform
+  BOOKING_COM // imported via iCal (display only — not a real booking record)
+  MANUAL     // manually added by admin (cash, phone booking)
+}
+
+enum GuestIdType {
+  PASSPORT
+  NATIONAL_ID
+}
+
+// -----------------------------------------
+// OPERATIONS
+// -----------------------------------------
+
+enum CleaningTaskType {
+  TURNOVER
+  DEEP_CLEAN
+  MAINTENANCE
+}
+
+enum CleaningTaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  URGENT
+}
+
+enum MaintenanceIssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model CleaningTask {
+  id         String             @id @default(cuid())
+  propertyId String
+  bookingReference  String?  // e.g. "KVL-A3F9B2C1" — display only, not a FK; preserved as operational history
+  date       DateTime           @db.Date
+  status     CleaningTaskStatus @default(PENDING)
+  type       CleaningTaskType
+  assignedTo String?
+  notes      String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, date])
+  @@index([status])
+  @@map("cleaning_tasks")
+}
+
+model MaintenanceIssue {
+  id          String                  @id @default(cuid())
+  propertyId  String
+  title       String
+  description String
+  priority    MaintenancePriority     @default(MEDIUM)
+  status      MaintenanceIssueStatus  @default(OPEN)
+  reportedBy  String
+  assignedTo  String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  resolvedAt  DateTime?
+  notes       String?
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([priority])
+  @@map("maintenance_issues")
+}
