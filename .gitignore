@@ -42,3 +42,10 @@ next-env.d.ts
 
 # project docs (internal)
 /docs/
+
+# archived / unused assets
+/archive/
+
+# playwright artifacts
+/test-results/
+/playwright-report/
