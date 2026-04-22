@@ -4,7 +4,7 @@ import { auth } from '@/server/auth'
 import { AdminSidebar } from '@/components/admin/sidebar'
 
 export const metadata: Metadata = {
-  title: "Admin · Georgia's Cozy Rooms",
+  title: "Admin · Georgia's Cosy Rooms",
   robots: 'noindex, nofollow',
 }
 
@@ -20,9 +20,14 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <AdminSidebar />
-      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    <div className="cosy flex h-screen overflow-hidden">
+      <AdminSidebar userName={session.user.name ?? session.user.email ?? undefined} />
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{ background: 'var(--cosy-cream)' }}
+      >
+        {children}
+      </main>
     </div>
   )
 }

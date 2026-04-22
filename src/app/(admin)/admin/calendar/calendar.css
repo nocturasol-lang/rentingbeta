@@ -1,0 +1,149 @@
+/* Cosy-themed FullCalendar overrides. Scoped via .fc so nothing leaks. */
+
+.fc {
+  font-family: var(--font-sans);
+  color: var(--cosy-ink);
+  --fc-border-color: var(--cosy-line-soft);
+  --fc-today-bg-color: var(--cosy-peach-soft);
+  --fc-neutral-bg-color: var(--cosy-cream);
+  --fc-page-bg-color: var(--cosy-paper);
+}
+
+.fc .fc-scrollgrid,
+.fc .fc-scrollgrid-section > * {
+  border-color: var(--cosy-line-soft);
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: var(--cosy-line-soft);
+}
+
+.fc-col-header-cell-cushion {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--cosy-ink-mute);
+  padding: 10px 8px !important;
+}
+
+.fc-daygrid-day-number {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--cosy-ink);
+  padding: 6px 8px !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  background: var(--cosy-ink);
+  color: #fff;
+  border-radius: 999px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  margin: 6px;
+}
+
+.fc-day-other .fc-daygrid-day-number {
+  color: var(--cosy-ink-mute);
+  opacity: 0.65;
+}
+
+.fc-day-today {
+  background: var(--cosy-peach-soft) !important;
+}
+
+/* Event chips */
+.cosy-event {
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  font-family: var(--font-sans);
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.2px;
+  margin: 1px 2px !important;
+  cursor: pointer;
+  transition: filter 120ms;
+}
+
+.cosy-event:hover {
+  filter: brightness(1.08);
+}
+
+.cosy-event .fc-event-main {
+  padding: 0 !important;
+}
+
+.cosy-event--external_block {
+  opacity: 0.85;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0) 5px,
+    rgba(255, 255, 255, 0.25) 5px,
+    rgba(255, 255, 255, 0.25) 10px
+  ) !important;
+}
+
+.cosy-event--availability_rule {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--cosy-ink-mute) 0,
+    var(--cosy-ink-mute) 5px,
+    var(--cosy-ink-soft) 5px,
+    var(--cosy-ink-soft) 10px
+  ) !important;
+  color: #fff !important;
+}
+
+.cosy-event--pending {
+  opacity: 0.7;
+  border: 1px dashed rgba(255, 255, 255, 0.55) !important;
+}
+
+/* "+N more" link */
+.cosy-more,
+.fc-more-link {
+  font-family: var(--font-sans);
+  font-size: 10px !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cosy-ink-mute) !important;
+  padding: 2px 6px !important;
+}
+
+.fc-more-link:hover {
+  color: var(--cosy-ink) !important;
+}
+
+.fc-popover {
+  border: 1px solid var(--cosy-line) !important;
+  border-radius: var(--cosy-r2) !important;
+  background: var(--cosy-paper) !important;
+  box-shadow: 0 12px 32px -12px rgba(31, 31, 30, 0.18) !important;
+}
+
+.fc-popover-header {
+  background: var(--cosy-peach-soft) !important;
+  font-family: var(--font-sans);
+  font-size: 11px !important;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--cosy-ink) !important;
+  padding: 8px 12px !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

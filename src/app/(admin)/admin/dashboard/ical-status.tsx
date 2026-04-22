@@ -1,67 +1,104 @@
 'use client'
 
-import { trpc } from '@/lib/trpc'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { RefreshCw } from 'lucide-react'
-
-const syncStatusColor: Record<string, string> = {
-  PENDING: 'bg-gray-100 text-gray-600',
-  SYNCING: 'bg-blue-100 text-blue-800',
-  SUCCESS: 'bg-green-100 text-green-800',
-  ERROR: 'bg-red-100 text-red-800',
-}
+import { trpc } from '@/lib/trpc'
+import {
+  Panel,
+  PanelTitle,
+  StatusPill,
+  SyncStatusTone,
+} from '@/components/admin/cosy/primitives'
 
 export function IcalStatusStrip() {
   const { data, isLoading, refetch } = trpc.admin.ical.status.useQuery()
   const syncMutation = trpc.admin.ical.sync.useMutation({
     onSuccess: () => {
-      // Refetch status after a short delay to show updated sync state
       setTimeout(() => refetch(), 2000)
     },
   })
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">iCal Sync Status</CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => syncMutation.mutate({})}
-          disabled={syncMutation.isPending}
-        >
-          <RefreshCw className={`mr-2 h-3 w-3 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
-          Sync All
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        ) : !data || data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No properties with iCal configured</p>
-        ) : (
-          <div className="space-y-3">
-            {data.map((p) => (
-              <div key={p.propertyId} className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{p.propertyName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.icalUrl ? `${p.externalBlockCount} blocks imported` : 'No iCal URL'}
-                    {p.icalLastSyncedAt && (
-                      <> · Last sync: {new Date(p.icalLastSyncedAt).toLocaleString()}</>
-                    )}
-                  </p>
+    <Panel>
+      <PanelTitle
+        action={
+          <button
+            type="button"
+            onClick={() => syncMutation.mutate({})}
+            disabled={syncMutation.isPending}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 'var(--cosy-r-full)',
+              background: 'var(--cosy-ink)',
+              color: '#fff',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 1.4,
+              textTransform: 'uppercase',
+              border: 'none',
+              cursor: syncMutation.isPending ? 'wait' : 'pointer',
+              opacity: syncMutation.isPending ? 0.7 : 1,
+            }}
+          >
+            <RefreshCw
+              className="h-3 w-3"
+              style={{ animation: syncMutation.isPending ? 'spin 1s linear infinite' : undefined }}
+            />
+            Sync all
+          </button>
+        }
+      >
+        iCal sync
+      </PanelTitle>
+
+      {isLoading ? (
+        <div className="cosy-sans" style={{ fontSize: 13, color: 'var(--cosy-ink-mute)' }}>
+          Loading…
+        </div>
+      ) : !data || data.length === 0 ? (
+        <div className="cosy-sans" style={{ fontSize: 13, color: 'var(--cosy-ink-mute)' }}>
+          No properties with iCal configured.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {data.map((p) => (
+            <div
+              key={p.propertyId}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 0',
+                borderBottom: '1px solid var(--cosy-line-soft)',
+              }}
+            >
+              <div>
+                <div
+                  className="cosy-sans"
+                  style={{ fontSize: 13, fontWeight: 600, color: 'var(--cosy-ink)' }}
+                >
+                  {p.propertyName}
                 </div>
-                <Badge variant="outline" className={syncStatusColor[p.icalSyncStatus]}>
-                  {p.icalSyncStatus}
-                </Badge>
+                <div
+                  className="cosy-sans"
+                  style={{ fontSize: 11, color: 'var(--cosy-ink-mute)', marginTop: 2 }}
+                >
+                  {p.icalUrl ? `${p.externalBlockCount} blocks imported` : 'No iCal URL'}
+                  {p.icalLastSyncedAt && (
+                    <> · Synced {new Date(p.icalLastSyncedAt).toLocaleString()}</>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <StatusPill tone={SyncStatusTone(p.icalSyncStatus)}>
+                {p.icalSyncStatus}
+              </StatusPill>
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
   )
 }
