@@ -23,6 +23,7 @@ export const adminPropertiesRouter = router({
         where: { id: input.id },
         include: {
           images: { orderBy: { position: 'asc' } },
+          _count: { select: { bookings: true, externalBlocks: true } },
         },
       })
       if (!property) {

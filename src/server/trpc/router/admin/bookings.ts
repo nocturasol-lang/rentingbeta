@@ -156,6 +156,22 @@ export const adminBookingsRouter = router({
       })
     }),
 
+  /** Save admin-only notes on a booking (auto-save from the detail panel) */
+  updateAdminNotes: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        notes: z.string().max(5000),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return prisma.booking.update({
+        where: { id: input.id },
+        data: { adminNotes: input.notes.trim() || null },
+        select: { id: true, adminNotes: true },
+      })
+    }),
+
   /** Admin cancels a booking with configurable refund policy */
   cancelBooking: adminProcedure
     .input(

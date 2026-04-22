@@ -1,13 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+import * as React from 'react'
 import { amenityList, amenityCategories } from '@/lib/amenities'
+import { Panel, PillButton } from '@/components/admin/cosy/primitives'
 
 interface PropertyFormProps {
   property: {
@@ -22,7 +17,6 @@ interface PropertyFormProps {
     bedrooms: number
     bathrooms: number
     amenities: string[]
-    icalUrl: string | null
     licenseNumber: string | null
     checkInFrom: string
     checkInTo: string
@@ -37,7 +31,7 @@ interface PropertyFormProps {
 }
 
 export function PropertyForm({ property, onSubmit, isPending, error }: PropertyFormProps) {
-  const [form, setForm] = useState({
+  const [form, setForm] = React.useState({
     name: property.name,
     slug: property.slug,
     description: property.description,
@@ -48,8 +42,7 @@ export function PropertyForm({ property, onSubmit, isPending, error }: PropertyF
     maxGuests: property.maxGuests,
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
-    amenities: property.amenities as string[],
-    icalUrl: property.icalUrl ?? '',
+    amenities: property.amenities,
     licenseNumber: property.licenseNumber ?? '',
     checkInFrom: property.checkInFrom,
     checkInTo: property.checkInTo,
@@ -73,7 +66,6 @@ export function PropertyForm({ property, onSubmit, isPending, error }: PropertyF
       bedrooms: form.bedrooms,
       bathrooms: form.bathrooms,
       amenities: form.amenities,
-      icalUrl: form.icalUrl || null,
       licenseNumber: form.licenseNumber || null,
       checkInFrom: form.checkInFrom,
       checkInTo: form.checkInTo,
@@ -89,175 +81,421 @@ export function PropertyForm({ property, onSubmit, isPending, error }: PropertyF
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Basic Info</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" value={form.slug} onChange={(e) => set('slug', e.target.value)} required />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" rows={4} value={form.description} onChange={(e) => set('description', e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" value={form.address} onChange={(e) => set('address', e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="licenseNumber">License Number</Label>
-            <Input id="licenseNumber" value={form.licenseNumber} onChange={(e) => set('licenseNumber', e.target.value)} />
-          </div>
-        </CardContent>
-      </Card>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <Panel>
+        <FieldGroupTitle>Basics</FieldGroupTitle>
+        <FieldRow cols={2}>
+          <Field label="Name">
+            <input
+              type="text"
+              required
+              value={form.name}
+              onChange={(e) => set('name', e.target.value)}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Slug" hint="URL — letters, numbers, dashes">
+            <input
+              type="text"
+              required
+              value={form.slug}
+              onChange={(e) => set('slug', e.target.value)}
+              pattern="[a-z0-9-]+"
+              style={inputStyle}
+            />
+          </Field>
+        </FieldRow>
+        <FieldRow>
+          <Field label="Description">
+            <textarea
+              required
+              rows={4}
+              value={form.description}
+              onChange={(e) => set('description', e.target.value)}
+              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
+            />
+          </Field>
+        </FieldRow>
+        <FieldRow cols={2}>
+          <Field label="Address">
+            <input
+              type="text"
+              required
+              value={form.address}
+              onChange={(e) => set('address', e.target.value)}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Licence number" hint="Greek tourism registry id">
+            <input
+              type="text"
+              value={form.licenseNumber}
+              onChange={(e) => set('licenseNumber', e.target.value)}
+              style={inputStyle}
+            />
+          </Field>
+        </FieldRow>
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bedrooms">Bedrooms</Label>
-              <Input id="bedrooms" type="number" min={1} value={form.bedrooms} onChange={(e) => set('bedrooms', parseInt(e.target.value))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bathrooms">Bathrooms</Label>
-              <Input id="bathrooms" type="number" min={1} value={form.bathrooms} onChange={(e) => set('bathrooms', parseInt(e.target.value))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxGuests">Max Guests</Label>
-              <Input id="maxGuests" type="number" min={1} value={form.maxGuests} onChange={(e) => set('maxGuests', parseInt(e.target.value))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="size">Size (m²)</Label>
-              <Input id="size" type="number" min={0} value={form.size} onChange={(e) => set('size', parseInt(e.target.value))} />
-            </div>
-          </div>
-          <div className="space-y-4">
-            <Label>Amenities ({form.amenities.length} selected)</Label>
-            {amenityCategories.map((category) => (
-              <div key={category}>
-                <p className="text-xs font-medium text-muted-foreground mb-2">{category}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {amenityList
-                    .filter((a) => a.category === category)
-                    .map(({ key, label }) => {
-                      const checked = form.amenities.includes(key)
-                      return (
-                        <label
-                          key={key}
-                          className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors ${
-                            checked ? 'bg-primary/10 border-primary text-foreground' : 'hover:bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              const next = checked
-                                ? form.amenities.filter((a) => a !== key)
-                                : [...form.amenities, key]
-                              set('amenities', next)
-                            }}
-                            className="rounded border-input"
-                          />
-                          <span>{label}</span>
-                        </label>
-                      )
-                    })}
-                </div>
+      <Panel>
+        <FieldGroupTitle>Layout</FieldGroupTitle>
+        <FieldRow cols={4}>
+          <Field label="Bedrooms">
+            <input
+              type="number"
+              min={1}
+              value={form.bedrooms}
+              onChange={(e) => set('bedrooms', parseInt(e.target.value) || 1)}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Bathrooms">
+            <input
+              type="number"
+              min={1}
+              value={form.bathrooms}
+              onChange={(e) => set('bathrooms', parseInt(e.target.value) || 1)}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Max guests">
+            <input
+              type="number"
+              min={1}
+              value={form.maxGuests}
+              onChange={(e) => set('maxGuests', parseInt(e.target.value) || 1)}
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Size (m²)">
+            <input
+              type="number"
+              min={0}
+              value={form.size}
+              onChange={(e) => set('size', parseInt(e.target.value) || 0)}
+              style={inputStyle}
+            />
+          </Field>
+        </FieldRow>
+      </Panel>
+
+      <Panel>
+        <FieldGroupTitle>Pricing</FieldGroupTitle>
+        <FieldRow cols={3}>
+          <Field label="Rate / night (€)">
+            <MoneyInput
+              cents={form.pricePerNightCents}
+              onChange={(c) => set('pricePerNightCents', c)}
+            />
+          </Field>
+          <Field label="Cleaning fee (€)">
+            <MoneyInput
+              cents={form.cleaningFeeCents}
+              onChange={(c) => set('cleaningFeeCents', c)}
+            />
+          </Field>
+          <Field label="Minimum nights">
+            <input
+              type="number"
+              min={1}
+              value={form.minNights}
+              onChange={(e) => set('minNights', parseInt(e.target.value) || 1)}
+              style={inputStyle}
+            />
+          </Field>
+        </FieldRow>
+      </Panel>
+
+      <Panel>
+        <FieldGroupTitle>Check-in / check-out</FieldGroupTitle>
+        <FieldRow cols={4}>
+          <Field label="Check-in from">
+            <input
+              type="text"
+              value={form.checkInFrom}
+              onChange={(e) => set('checkInFrom', e.target.value)}
+              placeholder="14:00"
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Check-in to">
+            <input
+              type="text"
+              value={form.checkInTo}
+              onChange={(e) => set('checkInTo', e.target.value)}
+              placeholder="20:00"
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Check-out from">
+            <input
+              type="text"
+              value={form.checkOutFrom}
+              onChange={(e) => set('checkOutFrom', e.target.value)}
+              placeholder="08:00"
+              style={inputStyle}
+            />
+          </Field>
+          <Field label="Check-out to">
+            <input
+              type="text"
+              value={form.checkOutTo}
+              onChange={(e) => set('checkOutTo', e.target.value)}
+              placeholder="10:00"
+              style={inputStyle}
+            />
+          </Field>
+        </FieldRow>
+      </Panel>
+
+      <Panel>
+        <FieldGroupTitle>
+          Amenities · {form.amenities.length} selected
+        </FieldGroupTitle>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {amenityCategories.map((category) => (
+            <div key={category}>
+              <div
+                className="cosy-sans"
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: 1.6,
+                  textTransform: 'uppercase',
+                  color: 'var(--cosy-ink-mute)',
+                  marginBottom: 8,
+                }}
+              >
+                {category}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                  gap: 8,
+                }}
+              >
+                {amenityList
+                  .filter((a) => a.category === category)
+                  .map(({ key, label }) => {
+                    const checked = form.amenities.includes(key)
+                    return (
+                      <label
+                        key={key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '9px 14px',
+                          borderRadius: 'var(--cosy-r-full)',
+                          border: checked
+                            ? '1px solid var(--cosy-ink)'
+                            : '1px solid var(--cosy-line)',
+                          background: checked
+                            ? 'var(--cosy-peach-soft)'
+                            : 'var(--cosy-paper)',
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-sans)',
+                          fontSize: 12,
+                          color: 'var(--cosy-ink)',
+                          transition: 'background 140ms, border-color 140ms',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            const next = checked
+                              ? form.amenities.filter((a) => a !== key)
+                              : [...form.amenities, key]
+                            set('amenities', next)
+                          }}
+                          style={{ accentColor: 'var(--cosy-ink)' }}
+                        />
+                        <span>{label}</span>
+                      </label>
+                    )
+                  })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Pricing</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price/night (cents)</Label>
-              <Input id="price" type="number" min={0} value={form.pricePerNightCents} onChange={(e) => set('pricePerNightCents', parseInt(e.target.value))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cleaning">Cleaning fee (cents)</Label>
-              <Input id="cleaning" type="number" min={0} value={form.cleaningFeeCents} onChange={(e) => set('cleaningFeeCents', parseInt(e.target.value))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="minNights">Min nights</Label>
-              <Input id="minNights" type="number" min={1} value={form.minNights} onChange={(e) => set('minNights', parseInt(e.target.value))} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Panel>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => set('isActive', e.target.checked)}
+              style={{ accentColor: 'var(--cosy-ink)' }}
+            />
+            <span
+              className="cosy-sans"
+              style={{ fontSize: 13, color: 'var(--cosy-ink)' }}
+            >
+              Published — visible to guests
+            </span>
+          </label>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Check-in / Check-out</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="checkInFrom">Check-in from</Label>
-              <Input id="checkInFrom" value={form.checkInFrom} onChange={(e) => set('checkInFrom', e.target.value)} placeholder="14:00" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="checkInTo">Check-in to</Label>
-              <Input id="checkInTo" value={form.checkInTo} onChange={(e) => set('checkInTo', e.target.value)} placeholder="20:00" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="checkOutFrom">Check-out from</Label>
-              <Input id="checkOutFrom" value={form.checkOutFrom} onChange={(e) => set('checkOutFrom', e.target.value)} placeholder="08:00" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="checkOutTo">Check-out to</Label>
-              <Input id="checkOutTo" value={form.checkOutTo} onChange={(e) => set('checkOutTo', e.target.value)} placeholder="10:00" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          {error && (
+            <span
+              className="cosy-sans"
+              style={{
+                fontSize: 12,
+                color: '#9b2c2c',
+                background: '#fbeaea',
+                padding: '6px 12px',
+                borderRadius: 'var(--cosy-r1)',
+              }}
+            >
+              {error}
+            </span>
+          )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">iCal Sync</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="icalUrl">Booking.com iCal URL</Label>
-            <Input id="icalUrl" type="url" value={form.icalUrl} onChange={(e) => set('icalUrl', e.target.value)} placeholder="https://admin.booking.com/..." />
-          </div>
-        </CardContent>
-      </Card>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? 'Saving...' : 'Save Changes'}
-        </Button>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.isActive}
-            onChange={(e) => set('isActive', e.target.checked)}
-            className="rounded"
-          />
-          Active
-        </label>
-      </div>
+          <PillButton variant="solid" type="submit" disabled={isPending}>
+            {isPending ? 'Saving…' : 'Save changes'}
+          </PillButton>
+        </div>
+      </Panel>
     </form>
+  )
+}
+
+// ─── Inputs ──────────────────────────────────────────
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 14px',
+  borderRadius: 'var(--cosy-r2)',
+  border: '1px solid var(--cosy-line)',
+  fontFamily: 'var(--font-sans)',
+  fontSize: 13,
+  color: 'var(--cosy-ink)',
+  outline: 'none',
+  background: 'var(--cosy-paper)',
+  boxSizing: 'border-box',
+}
+
+function FieldGroupTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="cosy-sans"
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: 1.6,
+        textTransform: 'uppercase',
+        color: 'var(--cosy-ink-mute)',
+        marginBottom: 16,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function FieldRow({
+  children,
+  cols = 1,
+}: {
+  children: React.ReactNode
+  cols?: number
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gap: 14,
+        marginBottom: 14,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string
+  hint?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label
+        className="cosy-sans"
+        style={{
+          display: 'block',
+          fontSize: 10,
+          fontWeight: 500,
+          letterSpacing: 1.4,
+          textTransform: 'uppercase',
+          color: 'var(--cosy-ink-mute)',
+          marginBottom: 6,
+        }}
+      >
+        {label}
+      </label>
+      {children}
+      {hint && (
+        <div
+          className="cosy-sans"
+          style={{ fontSize: 10, color: 'var(--cosy-ink-mute)', marginTop: 4 }}
+        >
+          {hint}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MoneyInput({
+  cents,
+  onChange,
+}: {
+  cents: number
+  onChange: (cents: number) => void
+}) {
+  return (
+    <div style={{ position: 'relative' }}>
+      <span
+        className="cosy-sans"
+        style={{
+          position: 'absolute',
+          left: 14,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: 'var(--cosy-ink-mute)',
+          fontSize: 13,
+          pointerEvents: 'none',
+        }}
+      >
+        €
+      </span>
+      <input
+        type="number"
+        min={0}
+        value={Math.round(cents / 100)}
+        onChange={(e) => {
+          const v = parseInt(e.target.value, 10)
+          onChange(Number.isNaN(v) || v < 0 ? 0 : v * 100)
+        }}
+        style={{ ...inputStyle, paddingLeft: 28 }}
+      />
+    </div>
   )
 }
