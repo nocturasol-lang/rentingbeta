@@ -26,7 +26,15 @@ function addDays(d: Date, n: number) {
   return x
 }
 
-export function FloatingDatePicker() {
+export function FloatingDatePicker({
+  variant = 'floating',
+  submitTo = '/',
+  submitHash = '#apartments',
+}: {
+  variant?: 'floating' | 'inline'
+  submitTo?: string
+  submitHash?: string
+} = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -48,11 +56,18 @@ export function FloatingDatePicker() {
     params.set('checkIn', toISODate(checkIn))
     params.set('checkOut', toISODate(checkOut))
     params.set('guests', String(guests))
-    router.push(`/?${params.toString()}#apartments`)
+    router.push(`${submitTo}?${params.toString()}${submitHash}`)
   }
 
   return (
-    <div style={{ padding: '0 72px', marginTop: -44, position: 'relative', zIndex: 5 }}>
+    <div
+      style={{
+        padding: '0 72px',
+        marginTop: variant === 'floating' ? -44 : 0,
+        position: 'relative',
+        zIndex: 5,
+      }}
+    >
       <Reveal delay={200}>
         <form
           onSubmit={onSubmit}

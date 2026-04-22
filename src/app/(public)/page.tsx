@@ -1,4 +1,5 @@
 import { createServerCaller } from '@/lib/trpc-server'
+import Link from 'next/link'
 import { CosyHero } from '@/components/public/cosy/hero'
 import { FloatingDatePicker } from '@/components/public/cosy/date-picker-float'
 import {
@@ -7,7 +8,14 @@ import {
 } from '@/components/public/cosy/property-card'
 import { WholeHouseBlock } from '@/components/public/cosy/whole-house'
 import { CosyFooter } from '@/components/public/cosy/footer'
-import { Body, Display, Eyebrow, Reveal, RevealText } from '@/components/public/cosy/primitives'
+import {
+  Body,
+  Display,
+  Eyebrow,
+  Photo,
+  Reveal,
+  RevealText,
+} from '@/components/public/cosy/primitives'
 
 const numberWords = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
 
@@ -121,6 +129,8 @@ export default async function HomePage({
             justifyContent: 'space-between',
             alignItems: 'baseline',
             marginBottom: 40,
+            flexWrap: 'wrap',
+            gap: 16,
           }}
         >
           <div>
@@ -134,13 +144,41 @@ export default async function HomePage({
             </Reveal>
           </div>
           <Reveal delay={150}>
-            <Body size={12} color="var(--cosy-ink-mute)">
-              {cards.length === 1
-                ? '1 apartment · whole house available'
-                : `${cards.length} apartments · whole house available`}
-            </Body>
+            <Link
+              href="/properties"
+              style={{
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <Body size={13} color="var(--cosy-ink)" weight={600}>
+                Browse all apartments
+              </Body>
+              <span
+                aria-hidden
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 'var(--cosy-r-full)',
+                  background: 'var(--cosy-ink)',
+                  color: '#fff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14,
+                }}
+              >
+                →
+              </span>
+            </Link>
           </Reveal>
         </div>
+
+        {/* Browse thumbnail CTA */}
+        <BrowseThumbnail heroImageUrl={heroImage} />
+
 
         {cards.length === 0 ? (
           <Reveal>
@@ -177,5 +215,106 @@ export default async function HomePage({
 
       <CosyFooter />
     </>
+  )
+}
+
+function BrowseThumbnail({ heroImageUrl }: { heroImageUrl: string | null }) {
+  return (
+    <Reveal delay={200} dy={30}>
+      <Link
+        href="/properties"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1.1fr',
+          background: 'var(--cosy-paper)',
+          borderRadius: 'var(--cosy-r3)',
+          overflow: 'hidden',
+          boxShadow: '0 2px 10px rgba(31,31,30,.05)',
+          textDecoration: 'none',
+          color: 'inherit',
+          marginBottom: 32,
+          minHeight: 260,
+        }}
+      >
+        <div style={{ position: 'relative', minHeight: 220 }}>
+          <Photo
+            src={heroImageUrl}
+            alt="Browse all apartments"
+            tone="sage"
+            fill
+            radius={0}
+            sizes="(min-width: 1024px) 45vw, 100vw"
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 20,
+              left: 20,
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(6px)',
+              padding: '6px 14px',
+              borderRadius: 'var(--cosy-r-full)',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: 1.4,
+              textTransform: 'uppercase',
+              color: 'var(--cosy-ink)',
+            }}
+          >
+            4 apartments · Kavala
+          </div>
+        </div>
+        <div
+          style={{
+            padding: '44px 48px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: 12,
+          }}
+        >
+          <Eyebrow>See them side by side</Eyebrow>
+          <Display size={34} italic style={{ lineHeight: 1.1 }}>
+            Browse all four apartments.
+          </Display>
+          <Body size={14} color="var(--cosy-ink-soft)" style={{ lineHeight: 1.65, maxWidth: 420 }}>
+            Pick dates, compare sizes, see what&apos;s free — then book the one that fits your
+            stay.
+          </Body>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              marginTop: 8,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: 1.4,
+              textTransform: 'uppercase',
+              color: 'var(--cosy-ink)',
+            }}
+          >
+            Explore the collection
+            <span
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 'var(--cosy-r-full)',
+                background: 'var(--cosy-ink)',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+              }}
+            >
+              →
+            </span>
+          </div>
+        </div>
+      </Link>
+    </Reveal>
   )
 }

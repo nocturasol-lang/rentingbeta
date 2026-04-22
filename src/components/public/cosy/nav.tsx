@@ -9,7 +9,7 @@ type NavProps = {
 }
 
 const links: Array<{ label: string; href: string }> = [
-  { label: 'Apartments', href: '/#apartments' },
+  { label: 'Apartments', href: '/properties' },
   { label: 'The House', href: '/#whole-house' },
   { label: 'Kavala', href: '/#kavala' },
   { label: 'Contact', href: 'mailto:georgia@georgiascosyrooms.gr' },
