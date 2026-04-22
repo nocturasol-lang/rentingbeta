@@ -9,7 +9,15 @@ function formatDisplay(d: Date) {
 }
 
 function toISODate(d: Date) {
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function parseISODate(s: string): Date {
+  const [y, m, d] = s.split('-').map((n) => parseInt(n, 10))
+  return new Date(y, m - 1, d)
 }
 
 function addDays(d: Date, n: number) {
@@ -124,7 +132,15 @@ function DateField({
         value={toISODate(value)}
         min={min}
         onChange={(e) => {
-          if (e.target.value) onChange(new Date(e.target.value))
+          if (e.target.value) onChange(parseISODate(e.target.value))
+        }}
+        onClick={(e) => {
+          const el = e.currentTarget as HTMLInputElement & { showPicker?: () => void }
+          el.showPicker?.()
+        }}
+        onFocus={(e) => {
+          const el = e.currentTarget as HTMLInputElement & { showPicker?: () => void }
+          el.showPicker?.()
         }}
         style={{
           position: 'absolute',
