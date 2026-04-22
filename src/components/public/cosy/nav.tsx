@@ -5,6 +5,7 @@ import { Btn } from './primitives'
 
 type NavProps = {
   inverted?: boolean
+  bookHref?: string
 }
 
 const links: Array<{ label: string; href: string }> = [
@@ -14,7 +15,7 @@ const links: Array<{ label: string; href: string }> = [
   { label: 'Contact', href: 'mailto:georgia@georgiascosyrooms.gr' },
 ]
 
-export function CosyNav({ inverted = false }: NavProps) {
+export function CosyNav({ inverted = false, bookHref = '/#apartments' }: NavProps) {
   const color = inverted ? '#fff' : 'var(--cosy-ink)'
   const mute = inverted ? 'rgba(255,255,255,0.7)' : 'var(--cosy-ink-mute)'
   return (
@@ -66,16 +67,28 @@ export function CosyNav({ inverted = false }: NavProps) {
             {l.label}
           </Link>
         ))}
-        <Btn
-          variant="primary"
-          size="sm"
+        <Link
+          href={bookHref}
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: 1.4,
+            textTransform: 'uppercase',
+            padding: '10px 18px',
+            borderRadius: 'var(--cosy-r-full)',
             background: inverted ? '#fff' : 'var(--cosy-ink)',
             color: inverted ? 'var(--cosy-ink)' : '#fff',
+            textDecoration: 'none',
+            transition: 'transform 180ms cubic-bezier(.34,1.56,.64,1)',
           }}
         >
           Book direct
-        </Btn>
+        </Link>
       </div>
     </div>
   )

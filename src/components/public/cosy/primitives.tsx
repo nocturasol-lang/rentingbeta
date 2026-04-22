@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils'
 
 // ─── Scroll-reveal motion ──────────────────────────────────────────
 
-function useInView(threshold = 0.15) {
-  const ref = React.useRef<HTMLDivElement | null>(null)
+function useInView<T extends Element = HTMLDivElement>(threshold = 0.15) {
+  const ref = React.useRef<T | null>(null)
   const [inView, setInView] = React.useState(false)
   React.useEffect(() => {
     const el = ref.current
@@ -465,6 +465,46 @@ export function Chip({
     >
       {children}
     </div>
+  )
+}
+
+// ─── CountUp ──────────────────────────────────────────
+
+export function CountUp({
+  to,
+  duration = 900,
+  prefix = '',
+  suffix = '',
+  decimals = 0,
+}: {
+  to: number
+  duration?: number
+  prefix?: string
+  suffix?: string
+  decimals?: number
+}) {
+  const [ref, inView] = useInView<HTMLSpanElement>()
+  const [value, setValue] = React.useState(0)
+  React.useEffect(() => {
+    if (!inView) return
+    const start = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setValue(to * eased)
+      if (t < 1) raf = requestAnimationFrame(tick)
+      else setValue(to)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [inView, to, duration])
+  return (
+    <span ref={ref}>
+      {prefix}
+      {value.toFixed(decimals)}
+      {suffix}
+    </span>
   )
 }
 
