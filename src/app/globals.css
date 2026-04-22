@@ -134,6 +134,39 @@
   --ring: #1B4F72;
 }
 
+/* Cosy Rooms — warm-grey editorial theme (classic hotel polish) */
+.cosy {
+  --cosy-ink: #1F1F1E;
+  --cosy-ink-soft: #3E3E3C;
+  --cosy-ink-mute: #8A8A87;
+  --cosy-line: #DADAD5;
+  --cosy-line-soft: #EAEAE5;
+  --cosy-cream: #EEEEE9;
+  --cosy-cream-soft: #F5F5F0;
+  --cosy-peach: #E0E0DA;
+  --cosy-peach-soft: #E8E8E2;
+  --cosy-paper: #FFFFFF;
+  --cosy-accent: #5A5A56;
+  --cosy-accent-soft: #B8B8B3;
+  --cosy-sage: #C4C4BE;
+  --cosy-sunshine: #D8D3BE;
+  --cosy-r1: 10px;
+  --cosy-r2: 18px;
+  --cosy-r3: 28px;
+  --cosy-r-full: 999px;
+  --font-display: var(--font-display), 'Playfair Display', Georgia, serif;
+
+  background: var(--cosy-cream);
+  color: var(--cosy-ink);
+}
+
+.cosy-display { font-family: var(--font-display); letter-spacing: -0.3px; line-height: 1.02; }
+.cosy-sans { font-family: var(--font-sans); }
+.cosy-mono { font-family: var(--font-mono); }
+
+@keyframes cosy-check-draw { to { stroke-dashoffset: 0; } }
+@keyframes cosy-sig-draw { to { stroke-dashoffset: 0; } }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
